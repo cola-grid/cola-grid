@@ -24,6 +24,7 @@
         <module>collagid-ot</module>
         <module>collagid-boot-starter</module>
         <module>examples/ws</module>
+        <module>examples/spring-mysql</module>
     </modules>
 
     <properties>

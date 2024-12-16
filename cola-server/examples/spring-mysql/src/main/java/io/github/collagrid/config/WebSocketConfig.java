@@ -1,4 +1,4 @@
-package io.github.collagrid.example.examples.config;
+package io.github.collagrid.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
