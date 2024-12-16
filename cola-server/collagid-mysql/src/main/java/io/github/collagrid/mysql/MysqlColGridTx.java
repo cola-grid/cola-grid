@@ -7,7 +7,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 public class MysqlColGridTx implements ColaGridTx {
     private final PlatformTransactionManager transactionManager;
-    private TransactionStatus transactionStatus;
+
+    private final ThreadLocal<TransactionStatus> transactionStatus = new ThreadLocal<>();
 
     public MysqlColGridTx(PlatformTransactionManager transactionManager) {
         this.transactionManager = transactionManager;
@@ -15,22 +16,26 @@ public class MysqlColGridTx implements ColaGridTx {
 
     @Override
     public boolean startTx() {
-        transactionStatus = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        transactionStatus.set(transactionManager.getTransaction(new DefaultTransactionDefinition()));
         return true;
     }
 
     @Override
     public boolean commitTx() {
-        if (transactionStatus != null) {
-            transactionManager.commit(transactionStatus);
+        TransactionStatus status = transactionStatus.get();
+        if (status != null) {
+            transactionManager.commit(status);
+            transactionStatus.remove(); // 清理 ThreadLocal，防止内存泄漏
         }
         return true;
     }
 
     @Override
     public void rollbackTx() {
-        if (transactionStatus != null) {
-            transactionManager.rollback(transactionStatus);
+        TransactionStatus status = transactionStatus.get();
+        if (status != null) {
+            transactionManager.rollback(status);
+            transactionStatus.remove();
         }
     }
 }
