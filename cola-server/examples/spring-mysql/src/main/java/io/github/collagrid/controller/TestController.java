@@ -5,6 +5,7 @@ import io.github.collagid.core.cmd.api.ApiCmdParams;
 import io.github.collagid.core.cmd.api.ApiCmdType;
 import io.github.collagid.core.des.Engine;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 

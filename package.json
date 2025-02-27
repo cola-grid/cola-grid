@@ -1,0 +1,13 @@
+{ 
+  "name": "cola-grid",
+  "version": "1.0.0",
+  "description": "一个类似 Airtable 的开源多维表格项目",
+  "main": "index.js",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "author": "你的名字",
+  "license": "MIT"
+} 
