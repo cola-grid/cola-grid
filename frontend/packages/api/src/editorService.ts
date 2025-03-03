@@ -74,11 +74,7 @@ export const simulateServerPush = () => {
   const colIds = ['make', 'model', 'price'];
   
   // 随机选择一个未使用的编辑者
-  const availableEditors = editors.filter(editor => !activeEditors.has(editor));
-  if (availableEditors.length === 0) {
-    console.log('所有编辑者都已在使用中');
-    return;
-  }
+  const availableEditors = editors;
   
   const randomEditorIndex = Math.floor(Math.random() * availableEditors.length);
   const editor = availableEditors[randomEditorIndex];
