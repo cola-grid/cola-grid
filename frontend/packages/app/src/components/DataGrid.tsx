@@ -32,17 +32,18 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
   const gridRef = useRef<any>();
   
   // 存储单元格编辑状态
-  const [editingStates, setEditingStates] = useState<EditorState[]>([
+  const editingStatesRef = useRef<EditorState[]>([
     { rowIndex: 0, colId: 'model', editor: 'User1', color: '#0000ff' },
     { rowIndex: 1, colId: 'model', editor: '2人编辑', color: '#ff0000' },
     { rowIndex: 3, colId: 'model', editor: 'User2', color: '#ff0000' }
   ]);
+  const [editingStates, setEditingStates] = useState(editingStatesRef.current);
 
   const getEditorState = useCallback((params: ICellRendererParams) => {
-    return editingStates.find(
+    return editingStatesRef.current.find(
       state => state.rowIndex == params.node.rowIndex && state.colId == params.column.getColId()
     );
-  }, [editingStates]);
+  }, []);
 
   const cellRenderer = useCallback((params: ICellRendererParams) => {
     const editorState = getEditorState(params);
@@ -162,7 +163,9 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
       // 移除相同位置的旧状态
       const filtered = prev.filter(state => !(state.rowIndex === rowIndex && state.colId === colId));
       // 添加新状态
-      return [...filtered, { rowIndex, colId, editor, color }];
+      const newState =  [...filtered, { rowIndex, colId, editor, color }];
+      editingStatesRef.current = newState;
+      return newState;
     });
 
     // 获取单元格并刷新
@@ -216,7 +219,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
         </button>
         <button
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          onClick={() => updateEditorState(2, 'model', 'User3', '#00ff00')}
+          onClick={() => updateEditorState(2, 'model', 'User3', '#6b56e3')}
         >
           模拟新编辑者
         </button>
