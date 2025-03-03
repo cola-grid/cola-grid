@@ -198,7 +198,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-4">
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           onClick={onExportExcel}
