@@ -3,10 +3,21 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-enterprise';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'ag-grid-community/styles/ag-theme-balham.css';
-import { ValidationModule, AllEnterpriseModule, ModuleRegistry } from 'ag-grid-enterprise';
-import { AllCommunityModule, themeQuartz } from 'ag-grid-community';
+import { 
+  ValidationModule, 
+  AllEnterpriseModule, 
+  ModuleRegistry,
+  Column,
+  RowNode
+} from 'ag-grid-enterprise';
+import { 
+  AllCommunityModule, 
+  themeQuartz,
+  ThemeDefaultParams
+} from 'ag-grid-community';
 import './DataGrid.css';
 import { DynamicStyleManager } from './DynamicStyleManager';
+import '@cola-grid/base-component';
 import { 
   EditorState, 
   columnDefs, 
@@ -21,9 +32,8 @@ const lightTheme = themeQuartz.withParams({
   headerBackgroundColor: '#f3f4f6',
   rowHoverColor: '#f9fafb',
   selectedRowBackgroundColor: '#e5edff',
-  cellBackgroundColor: '#ffffff',
   borderColor: '#e5e7eb',
-});
+} as Partial<ThemeDefaultParams>);
 
 const darkTheme = themeQuartz.withParams({
   columnBorder: '1px solid #374151',
@@ -31,11 +41,9 @@ const darkTheme = themeQuartz.withParams({
   headerBackgroundColor: '#111827',
   rowHoverColor: '#374151',
   selectedRowBackgroundColor: '#2563eb',
-  cellBackgroundColor: '#1f2937',
   borderColor: '#374151',
-  headerForegroundColor: '#ffffff',
   foregroundColor: '#ffffff',
-});
+} as Partial<ThemeDefaultParams>);
 
 ModuleRegistry.registerModules([
   AllEnterpriseModule,
@@ -135,9 +143,62 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
     setIsDarkMode(prev => !prev);
   }, []);
 
+  const handleInsertRow = useCallback(() => {
+    const rowData = {
+      // 添加新行的默认数据
+    };
+    gridRef.current?.api.applyTransaction({ add: [rowData] });
+  }, []);
+
+  const handleHideColumn = useCallback(() => {
+    const selectedColumns = gridRef.current?.api.getSelectedColumns();
+    if (selectedColumns?.length) {
+      gridRef.current?.columnApi.setColumnsVisible(selectedColumns, false);
+    }
+  }, []);
+
+  const handleFilter = useCallback(() => {
+    gridRef.current?.api.setQuickFilter(
+      prompt('请输入筛选关键字') || ''
+    );
+  }, []);
+
+  const handleGroup = useCallback(() => {
+    const selectedColumns = gridRef.current?.api.getSelectedColumns();
+    if (selectedColumns?.length) {
+      gridRef.current?.columnApi.addRowGroupColumns(selectedColumns);
+    }
+  }, []);
+
+  const handleSort = useCallback(() => {
+    const selectedColumns = gridRef.current?.api.getSelectedColumns();
+    if (selectedColumns?.length) {
+      gridRef.current?.api.setSortModel(
+        selectedColumns.map((col: Column) => ({
+          colId: col.getId(),
+          sort: 'asc'
+        }))
+      );
+    }
+  }, []);
+
+  const handleRowHeight = useCallback(() => {
+    const height = parseInt(prompt('请输入行高（像素）', '40') || '40');
+    if (!isNaN(height)) {
+      gridRef.current?.api.forEachNode((node: RowNode) => {
+        node.setRowHeight(height);
+      });
+      gridRef.current?.api.onRowHeightChanged();
+    }
+  }, []);
+
+  const handleShare = useCallback(() => {
+    onExportExcel();
+  }, [onExportExcel]);
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex items-center justify-between">
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           onClick={onExportExcel}
@@ -161,7 +222,32 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
           {isDarkMode ? '☀️ 日间模式' : '🌙 夜间模式'}
         </button>
       </div>
-      <div className={`w-full h-[500px]`}>
+      <div>
+        <cola-toolbar
+            oninsert-row={handleInsertRow}
+            onhide-column={handleHideColumn}
+            onfilter={handleFilter}
+            ongroup={handleGroup}
+            onsort={handleSort}
+            onadjust-row-height={handleRowHeight}
+            onshare={handleShare}
+          />
+      </div>
+      <div 
+        className={`w-full h-[500px] ${isDarkMode ? 'theme-dark' : 'theme-light'}`}
+        style={{
+          '--toolbar-bg': isDarkMode ? '#1f2937' : '#ffffff',
+          '--toolbar-border-color': isDarkMode ? '#374151' : '#e8e8e8',
+          '--button-border-color': isDarkMode ? '#4b5563' : '#d9d9d9',
+          '--button-color': isDarkMode ? '#e5e7eb' : '#595959',
+          '--button-hover-color': isDarkMode ? '#60a5fa' : '#1677ff',
+          '--button-hover-border-color': isDarkMode ? '#60a5fa' : '#1677ff',
+          '--button-hover-bg': isDarkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(22, 119, 255, 0.1)',
+          '--button-active-color': isDarkMode ? '#3b82f6' : '#0958d9',
+          '--button-active-border-color': isDarkMode ? '#3b82f6' : '#0958d9',
+          '--divider-color': isDarkMode ? '#374151' : '#e8e8e8'
+        } as React.CSSProperties}
+      >
         <AgGridReact
           ref={gridRef}
           theme={isDarkMode ? darkTheme : lightTheme}
