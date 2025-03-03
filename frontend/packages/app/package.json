@@ -10,13 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@frontend/api": "workspace:*",
+    "@frontend/shared": "workspace:*",
+    "ag-grid-community": "^33.1.1",
+    "ag-grid-enterprise": "^33.1.1",
+    "ag-grid-react": "^33.1.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@frontend/shared": "workspace:*",
-    "@frontend/api": "workspace:*",
-    "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35"
+    "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.57",
