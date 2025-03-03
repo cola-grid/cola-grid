@@ -6,3 +6,7 @@ const api = axios.create({
 });
 
 export default api;
+
+export * from './types';
+export * from './gridData';
+export * from './editorService';

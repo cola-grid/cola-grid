@@ -1,15 +1,24 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-enterprise';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'ag-grid-community/styles/ag-theme-balham.css';
-import { ValidationModule,AllEnterpriseModule, ModuleRegistry, ColDef, ICellRendererParams, GridApi } from 'ag-grid-enterprise';
+import { ValidationModule, AllEnterpriseModule, ModuleRegistry, ICellRendererParams } from 'ag-grid-enterprise';
 import { AllCommunityModule, themeQuartz } from 'ag-grid-community';
 import './DataGrid.css';
+import { 
+  EditorState, 
+  columnDefs, 
+  rowData, 
+  subscribeToEditorStateChanges, 
+  getCurrentEditorStates,
+  simulateServerPush 
+} from '@cola-grid/api';
 
 const myTheme = themeQuartz.withParams({
   columnBorder: '1px solid #ccc'
 });
+
 ModuleRegistry.registerModules([
   AllEnterpriseModule,
   AllCommunityModule,
@@ -20,43 +29,64 @@ export interface DataGridProps {
   className?: string;
 }
 
-// 编辑状态类型
-interface EditorState {
-  rowIndex: number;
-  colId: string;
-  editor: string;
-  color: string;
-}
-
 export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
   const gridRef = useRef<any>();
   
   // 存储单元格编辑状态
-  const editingStatesRef = useRef<EditorState[]>([
-    { rowIndex: 0, colId: 'model', editor: 'User1', color: '#0000ff' },
-    { rowIndex: 1, colId: 'model', editor: '2人编辑', color: '#ff0000' },
-    { rowIndex: 3, colId: 'model', editor: 'User2', color: '#ff0000' }
-  ]);
-  const [editingStates, setEditingStates] = useState(editingStatesRef.current);
+  const editingStatesRef = useRef<Map<string, EditorState>>(new Map());
+  const [editingStates, setEditingStates] = useState<Map<string, EditorState>>(editingStatesRef.current);
+
+  // 获取单元格的唯一标识
+  const getCellKey = useCallback((rowIndex: number, colId: string) => {
+    return `${rowIndex}-${colId}`;
+  }, []);
+
+  // 订阅编辑状态变化
+  useEffect(() => {
+    const unsubscribe = subscribeToEditorStateChanges((state, type) => {
+      const key = getCellKey(state.rowIndex, state.colId);
+      console.log(`编辑状态${type}:`, state);
+
+      if (type === 'delete') {
+        editingStatesRef.current.delete(key);
+      } else {
+        editingStatesRef.current.set(key, state);
+      }
+      
+      setEditingStates(new Map(editingStatesRef.current));
+      
+      // 刷新受影响的单元格
+      const api = gridRef.current?.api;
+      if (api) {
+        const rowNode = api.getDisplayedRowAtIndex(state.rowIndex);
+        if (rowNode) {
+          api.refreshCells({
+            rowNodes: [rowNode],
+            columns: [state.colId],
+            force: true
+          });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [getCellKey]);
 
   const getEditorState = useCallback((params: ICellRendererParams) => {
-    return editingStatesRef.current.find(
-      state => state.rowIndex == params.node.rowIndex && state.colId == params.column.getColId()
-    );
-  }, []);
+    const key = getCellKey(params.node.rowIndex, params.column.getColId());
+    return editingStatesRef.current.get(key);
+  }, [getCellKey]);
 
   const cellRenderer = useCallback((params: ICellRendererParams) => {
     const editorState = getEditorState(params);
-    console.log('zzq see updated', params, editorState);
     if (!editorState) return params.value;
 
-    console.log(params, 'edited', editorState);
     const style = {
       position: 'relative' as const,
       height: '100%',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 20px 0 0' // 只保留右侧空间
+      padding: '0 20px 0 0'
     };
 
     const badgeStyle = {
@@ -72,7 +102,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
       backgroundColor: editorState.color,
       opacity: 0.8,
       whiteSpace: 'nowrap' as const,
-      zIndex: 1 // 确保 badge 在内容之上
+      zIndex: 1
     };
 
     return (
@@ -89,100 +119,6 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
       </div>
     );
   }, [getEditorState]);
-
-  const [columnDefs] = useState<ColDef[]>([
-    { 
-      field: 'make',
-      sortable: true,
-      filter: true,
-      checkboxSelection: true,
-      headerCheckboxSelection: true
-    },
-    { 
-      field: 'model',
-      sortable: true,
-      filter: true,
-      editable: true,
-      cellRenderer
-    },
-    { 
-      field: 'price',
-      sortable: true,
-      filter: true,
-      aggFunc: 'avg',
-      editable: true,
-      cellEditor: 'agRichSelect',
-      cellEditorParams: {
-        values: [25000, 28000, 30000, 32000, 35000, 72000],
-      }
-    }
-  ]);
-
-  const [rowData] = useState([
-    { 
-      make: 'Toyota',
-      model: 'Celica',
-      price: 35000,
-      monthlyData: [10, 15, 8, 12, 9, 14]
-    },
-    { 
-      make: 'Ford',
-      model: 'Mondeo',
-      price: 32000,
-      monthlyData: [8, 7, 9, 11, 13, 10]
-    },
-    { 
-      make: 'Ford',
-      model: 'Focus',
-      price: 28000,
-      monthlyData: [12, 11, 10, 9, 8, 7]
-    },
-    { 
-      make: 'Porsche',
-      model: 'Boxster',
-      price: 72000,
-      monthlyData: [5, 6, 8, 9, 7, 8]
-    },
-    { 
-      make: 'Toyota',
-      model: 'Corolla',
-      price: 25000,
-      monthlyData: [15, 14, 13, 12, 11, 10]
-    },
-    { 
-      make: 'Toyota',
-      model: 'Camry',
-      price: 30000,
-      monthlyData: [9, 10, 11, 12, 13, 14]
-    }
-  ]);
-
-  // 模拟收到服务器通知，更新编辑状态
-  const updateEditorState = useCallback((rowIndex: number, colId: string, editor: string, color: string) => {
-    setEditingStates(prev => {
-      // 移除相同位置的旧状态
-      const filtered = prev.filter(state => !(state.rowIndex === rowIndex && state.colId === colId));
-      // 添加新状态
-      const newState =  [...filtered, { rowIndex, colId, editor, color }];
-      editingStatesRef.current = newState;
-      return newState;
-    });
-
-    // 获取单元格并刷新
-    const api = gridRef.current?.api;
-    console.log(`修改 ${rowIndex} ${colId}`, api);
-    if (api) {
-      const rowNode = api.getDisplayedRowAtIndex(rowIndex);
-      if (rowNode) {
-        console.log(`刷新 ${rowIndex} ${colId}`, rowNode);
-        api.refreshCells({
-          rowNodes: [rowNode],
-          columns: [colId],
-          force: true
-        });
-      }
-    }
-  }, []);
 
   const onExportExcel = useCallback(() => {
     const params = {
@@ -219,7 +155,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
         </button>
         <button
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          onClick={() => updateEditorState(2, 'model', 'User3', '#6b56e3')}
+          onClick={() => simulateServerPush()}
         >
           模拟新编辑者
         </button>
@@ -240,6 +176,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
             enableValue: true,
             sortable: true,
             filter: true,
+            cellRenderer
           }}
           sideBar={{
             toolPanels: [
