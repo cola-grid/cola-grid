@@ -1,0 +1,35 @@
+.editor-cell {
+  position: relative;
+}
+
+.editor-info {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  height: 16px;
+  line-height: 12px;
+  color: white;
+  background-color: rgba(255, 0, 0, 0.8);
+  border-radius: 4px;
+  padding: 2px 5px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.editor-info[data-editor="User1"] {
+  background-color: rgba(0, 0, 255, 0.8);
+}
+
+.editor-info[data-editor="User2"] {
+  background-color: rgba(255, 0, 0, 0.8);
+}
+
+/* 添加单元格边框 */
+.ag-theme-quartz {
+  --ag-borders: solid;
+  --ag-borders-critical: solid;
+  --ag-row-border-width: 1px;
+  --ag-row-border-style: solid;
+  --ag-row-border-color: var(--ag-border-color);
+}

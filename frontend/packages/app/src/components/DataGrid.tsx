@@ -5,6 +5,9 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'ag-grid-community/styles/ag-theme-balham.css';
 import { ClientSideRowModelModule, ModuleRegistry } from 'ag-grid-enterprise';
 import { themeQuartz } from 'ag-grid-community';
+import { EditorCell } from './EditorCell';
+import './DataGrid.css';
+
 const myTheme = themeQuartz;
 ModuleRegistry.registerModules([
   ClientSideRowModelModule
@@ -28,7 +31,8 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
       field: 'model',
       sortable: true,
       filter: true,
-      editable: true
+      editable: true,
+      cellRenderer: EditorCell
     },
     { 
       field: 'price',
@@ -62,12 +66,14 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
     { 
       make: 'Toyota',
       model: 'Celica',
+      editorInfo: 'User1',
       price: 35000,
       monthlyData: [10, 15, 8, 12, 9, 14]
     },
     { 
       make: 'Ford',
       model: 'Mondeo',
+      editorInfo: '2人编辑',
       price: 32000,
       monthlyData: [8, 7, 9, 11, 13, 10]
     },
@@ -80,6 +86,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
     { 
       make: 'Porsche',
       model: 'Boxster',
+      editorInfo: 'User2',
       price: 72000,
       monthlyData: [5, 6, 8, 9, 7, 8]
     },
