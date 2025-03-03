@@ -15,8 +15,26 @@ import {
   simulateServerPush 
 } from '@cola-grid/api';
 
-const myTheme = themeQuartz.withParams({
-  columnBorder: '1px solid #ccc'
+const lightTheme = themeQuartz.withParams({
+  columnBorder: '1px solid #ccc',
+  backgroundColor: '#ffffff',
+  headerBackgroundColor: '#f3f4f6',
+  rowHoverColor: '#f9fafb',
+  selectedRowBackgroundColor: '#e5edff',
+  cellBackgroundColor: '#ffffff',
+  borderColor: '#e5e7eb',
+});
+
+const darkTheme = themeQuartz.withParams({
+  columnBorder: '1px solid #374151',
+  backgroundColor: '#1f2937',
+  headerBackgroundColor: '#111827',
+  rowHoverColor: '#374151',
+  selectedRowBackgroundColor: '#2563eb',
+  cellBackgroundColor: '#1f2937',
+  borderColor: '#374151',
+  headerForegroundColor: '#ffffff',
+  foregroundColor: '#ffffff',
 });
 
 ModuleRegistry.registerModules([
@@ -34,6 +52,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
   const [editingStates] = useState(new Map<string, EditorState>());
   const manager = useRef(new DynamicStyleManager());
   const unsubscribeRef = useRef<() => void>();
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // 获取单元格的唯一标识
   const getCellKey = useCallback((rowIndex: number, colId: string) => {
@@ -112,6 +131,10 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
     ];
   }, [onExportExcel]);
 
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
@@ -127,11 +150,21 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
         >
           模拟新编辑者
         </button>
+        <button
+          className={`px-4 py-2 rounded ${
+            isDarkMode 
+              ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
+              : 'bg-gray-800 hover:bg-gray-900 text-white'
+          }`}
+          onClick={toggleTheme}
+        >
+          {isDarkMode ? '☀️ 日间模式' : '🌙 夜间模式'}
+        </button>
       </div>
       <div className={`w-full h-[500px]`}>
         <AgGridReact
           ref={gridRef}
-          theme={myTheme}
+          theme={isDarkMode ? darkTheme : lightTheme}
           columnDefs={columnDefs}
           rowData={rowData}
           onGridReady={onGridReady}

@@ -12,4 +12,19 @@
   padding: 2px 5px;
   pointer-events: none;
   white-space: nowrap;
+  z-index: 1;
+}
+
+/* 暗色主题下的样式调整 */
+.ag-theme-quartz-dark .ag-header-cell,
+.ag-theme-quartz-dark .ag-cell {
+  color: #ffffff;
+}
+
+.ag-theme-quartz-dark .ag-row-hover {
+  background-color: #374151 !important;
+}
+
+.ag-theme-quartz-dark .ag-row-selected {
+  background-color: #2563eb !important;
 }
