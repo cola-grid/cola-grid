@@ -1,16 +1,15 @@
-body{
-  --ag-borders: solid 1px;
-  --ag-border-color: rgb(209, 213, 219);
-  --ag-row-hover-color: rgb(243, 244, 246);
-  --ag-selected-row-background-color: rgb(239, 246, 255);
-  --ag-row-border-color: rgb(229, 231, 235);
-  --ag-cell-horizontal-padding: 0.5rem;
-  
-  /* 添加竖直方向的边框 */
-  --ag-cell-horizontal-border: solid 1px var(--ag-border-color);
-  --ag-borders-critical: solid;
-  --ag-header-column-separator-display: block;
-  --ag-header-column-separator-height: 100%;
-  --ag-header-column-separator-width: 1px;
-  --ag-header-column-separator-color: var(--ag-border-color);
+        /* 自定义样式：单元格右上角显示编辑者状态 */
+.ag-cell[data-editor-info]::after {
+  content: attr(data-editor-info);
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  height: 16px;
+  line-height: 12px;
+  color: white;
+  border-radius: 4px;
+  padding: 2px 5px;
+  pointer-events: none;
+  white-space: nowrap;
 }

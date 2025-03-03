@@ -7,6 +7,9 @@ let editorStates: EditorState[] = [
   { rowIndex: 3, colId: 'model', editor: 'User2', color: '#ff0000' }
 ];
 
+// 记录活跃的编辑者
+const activeEditors = new Set<string>();
+
 type EditorStateChangeCallback = (state: EditorState, type: 'add' | 'update' | 'delete') => void;
 const subscribers: EditorStateChangeCallback[] = [];
 
@@ -16,6 +19,7 @@ export const subscribeToEditorStateChanges = (callback: EditorStateChangeCallbac
   
   // 初始化时，发送所有现有状态
   editorStates.forEach(state => {
+    activeEditors.add(state.editor);
     callback(state, 'add');
   });
 
@@ -34,19 +38,18 @@ export const getCurrentEditorStates = () => {
 
 // 更新编辑状态
 export const updateEditorState = (state: EditorState) => {
-  const existingIndex = editorStates.findIndex(
-    s => s.rowIndex === state.rowIndex && s.colId === state.colId
-  );
-
-  if (existingIndex > -1) {
-    // 更新现有状态
-    editorStates[existingIndex] = state;
-    subscribers.forEach(callback => callback(state, 'update'));
-  } else {
-    // 添加新状态
-    editorStates.push(state);
-    subscribers.forEach(callback => callback(state, 'add'));
+  // 如果该编辑者已有状态，先移除旧状态
+  const oldIndex = editorStates.findIndex(s => s.editor === state.editor);
+  if (oldIndex > -1) {
+    const oldState = editorStates[oldIndex];
+    editorStates.splice(oldIndex, 1);
+    subscribers.forEach(callback => callback(oldState, 'delete'));
   }
+
+  // 添加新状态
+  editorStates.push(state);
+  activeEditors.add(state.editor);
+  subscribers.forEach(callback => callback(state, 'add'));
 };
 
 // 删除编辑状态
@@ -58,6 +61,7 @@ export const deleteEditorState = (rowIndex: number, colId: string) => {
   if (index > -1) {
     const state = editorStates[index];
     editorStates.splice(index, 1);
+    activeEditors.delete(state.editor);
     subscribers.forEach(callback => callback(state, 'delete'));
   }
 };
@@ -67,12 +71,24 @@ export const simulateServerPush = () => {
   const rowIndex = Math.floor(Math.random() * 6);
   const editors = ['User1', 'User2', 'User3', 'User4'];
   const colors = ['#0000ff', '#ff0000', '#00ff00', '#ff00ff'];
-  const randomIndex = Math.floor(Math.random() * editors.length);
+  const colIds = ['make', 'model', 'price'];
+  
+  // 随机选择一个未使用的编辑者
+  const availableEditors = editors.filter(editor => !activeEditors.has(editor));
+  if (availableEditors.length === 0) {
+    console.log('所有编辑者都已在使用中');
+    return;
+  }
+  
+  const randomEditorIndex = Math.floor(Math.random() * availableEditors.length);
+  const editor = availableEditors[randomEditorIndex];
+  const color = colors[editors.indexOf(editor)];
+  const colId = colIds[Math.floor(Math.random() * colIds.length)];
 
   updateEditorState({
     rowIndex,
-    colId: 'model',
-    editor: editors[randomIndex],
-    color: colors[randomIndex]
+    colId,
+    editor,
+    color
   });
 };
