@@ -10,6 +10,7 @@ export interface EditorState {
 export interface JumpToRowOptions {
   rowIndex: number;          // 目标行号（1-based）
   highlight?: boolean;       // 是否高亮显示
+  scrollMode?: 'smooth' | 'instant' | 'none';  // 滚动模式：平滑/即时/不滚动
   focusCell?: {             // 可选的单元格聚焦
     field: string;          // 列字段名
     scrollIntoView?: boolean; // 是否滚动到可视区域

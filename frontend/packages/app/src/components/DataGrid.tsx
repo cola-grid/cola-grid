@@ -207,12 +207,75 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
     const targetIndex = options.rowIndex - 1; // 转换为0基索引
     if (targetIndex < 0 || targetIndex >= 1500) return;
 
-    // 确保目标行在可视区域内
-    gridRef.current.api.ensureIndexVisible(targetIndex);
+    const api = gridRef.current.api;
     
-    // 如果需要高亮显示
+    // 如果不需要滚动，直接处理选中和高亮
+    if (options.scrollMode === 'none') {
+      handlePostScroll(api, targetIndex, options);
+      return;
+    }
+
+    // 获取表格容器元素
+    const gridBodyElement = document.querySelector('.ag-body-viewport') as HTMLElement;
+    if (!gridBodyElement) return;
+
+    // 获取当前滚动位置和视口高度
+    const currentScrollTop = gridBodyElement.scrollTop;
+    const viewportHeight = gridBodyElement.clientHeight;
+    const defaultRowHeight = 40; // 默认行高
+    
+    // 计算目标位置
+    const targetScrollTop = targetIndex * defaultRowHeight;
+    const targetCenterOffset = viewportHeight / 2 - defaultRowHeight / 2;
+    const finalScrollTop = Math.max(0, targetScrollTop - targetCenterOffset);
+
+    // 根据滚动模式选择滚动方式
+    if (options.scrollMode === 'instant') {
+      gridBodyElement.scrollTop = finalScrollTop;
+      handlePostScroll(api, targetIndex, options);
+      return;
+    }
+
+    // 平滑滚动模式
+    const startTime = performance.now();
+    const duration = 800; // 动画持续时间（毫秒）
+    const startScrollTop = currentScrollTop;
+    const distanceToScroll = finalScrollTop - startScrollTop;
+
+    function easeInOutCubic(t: number): number {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function animateScroll(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeProgress = easeInOutCubic(progress);
+      const currentPosition = startScrollTop + distanceToScroll * easeProgress;
+      
+      gridBodyElement.scrollTop = currentPosition;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      } else {
+        handlePostScroll(api, targetIndex, options);
+      }
+    }
+
+    // 开始动画
+    requestAnimationFrame(animateScroll);
+  }, []);
+
+  // 处理滚动后的操作（高亮、选中等）
+  const handlePostScroll = (api: any, targetIndex: number, options: JumpToRowOptions) => {
+    // 确保目标行可见
+    api.ensureIndexVisible(targetIndex);
+
+    // 高亮效果
     if (options.highlight) {
-      const rowNode = gridRef.current.api.getDisplayedRowAtIndex(targetIndex);
+      const rowNode = api.getDisplayedRowAtIndex(targetIndex);
       if (rowNode) {
         rowNode.setDataValue('flash', true);
         setTimeout(() => rowNode.setDataValue('flash', false), 1000);
@@ -228,28 +291,27 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
       };
       
       if (options.focusCell.scrollIntoView) {
-        gridRef.current.api.ensureColumnVisible(options.focusCell.field);
+        api.ensureColumnVisible(options.focusCell.field);
       }
       
-      gridRef.current.api.clearRangeSelection();
-      gridRef.current.api.setFocusedCell(
+      api.clearRangeSelection();
+      api.setFocusedCell(
         cellPosition.rowIndex,
         cellPosition.column,
         cellPosition.rowPinned
       );
-      gridRef.current.api.getDisplayedRowAtIndex(targetIndex)?.setSelected(true);
-    } else {
-      // 如果没有指定单元格，只选中行
-      gridRef.current.api.clearRangeSelection();
-      gridRef.current.api.getDisplayedRowAtIndex(targetIndex)?.setSelected(true);
     }
-  }, []);
+    
+    // 选中目标行
+    api.getDisplayedRowAtIndex(targetIndex)?.setSelected(true);
+  };
 
   // 处理输入框跳转按钮点击
   const handleJumpToRow = useCallback(() => {
     const options: JumpToRowOptions = {
       rowIndex: jumpToRow,
-      highlight: true
+      highlight: true,
+      scrollMode: 'smooth'  // 默认使用平滑滚动
     };
     
     // 如果提供了外部处理函数，则调用它
