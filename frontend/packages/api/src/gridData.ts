@@ -2,6 +2,18 @@ import { GridColumn, VehicleData } from './types';
 
 // 表格列定义
 export const columnDefs: GridColumn[] = [
+  {
+    headerName: '#',
+    valueGetter: 'node.rowIndex + 1',
+    width: 80,
+    minWidth: 80,
+    maxWidth: 80,
+    sortable: false,
+    filter: false,
+    pinned: 'left',
+    suppressMovable: true,
+    cellClass: 'grid-row-number'
+  },
   { 
     field: 'make',
     sortable: true,
@@ -27,42 +39,43 @@ export const columnDefs: GridColumn[] = [
   }
 ];
 
-// 示例数据
-export const rowData: VehicleData[] = [
-  { 
-    make: 'Toyota',
-    model: 'Celica',
-    price: 35000,
-    monthlyData: [10, 15, 8, 12, 9, 14]
-  },
-  { 
-    make: 'Ford',
-    model: 'Mondeo',
-    price: 32000,
-    monthlyData: [8, 7, 9, 11, 13, 10]
-  },
-  { 
-    make: 'Ford',
-    model: 'Focus',
-    price: 28000,
-    monthlyData: [12, 11, 10, 9, 8, 7]
-  },
-  { 
-    make: 'Porsche',
-    model: 'Boxster',
-    price: 72000,
-    monthlyData: [5, 6, 8, 9, 7, 8]
-  },
-  { 
-    make: 'Toyota',
-    model: 'Corolla',
-    price: 25000,
-    monthlyData: [15, 14, 13, 12, 11, 10]
-  },
-  { 
-    make: 'Toyota',
-    model: 'Camry',
-    price: 30000,
-    monthlyData: [9, 10, 11, 12, 13, 14]
+// 汽车品牌和型号的映射
+const carModels = {
+  Toyota: ['Celica', 'Corolla', 'Camry', 'RAV4', 'Highlander', 'Prius'],
+  Ford: ['Mondeo', 'Focus', 'Mustang', 'Explorer', 'F-150', 'Escape'],
+  Porsche: ['Boxster', 'Cayman', '911', 'Panamera', 'Cayenne', 'Macan'],
+  BMW: ['3 Series', '5 Series', 'X3', 'X5', 'M3', 'M5'],
+  Mercedes: ['C-Class', 'E-Class', 'S-Class', 'GLC', 'GLE', 'AMG GT']
+};
+
+const prices = [25000, 28000, 30000, 32000, 35000, 72000];
+
+// 生成随机数据的函数
+function generateRandomData(count: number): VehicleData[] {
+  const data: VehicleData[] = [];
+  const makes = Object.keys(carModels);
+  
+  for (let i = 0; i < count; i++) {
+    const make = makes[Math.floor(Math.random() * makes.length)];
+    const models = carModels[make as keyof typeof carModels];
+    const model = models[Math.floor(Math.random() * models.length)];
+    const price = prices[Math.floor(Math.random() * prices.length)];
+    
+    // 生成6个月的随机数据，范围在5-20之间
+    const monthlyData = Array.from({length: 6}, () => 
+      Math.floor(Math.random() * 16) + 5
+    );
+    
+    data.push({
+      make,
+      model,
+      price,
+      monthlyData
+    });
   }
-];
+  
+  return data;
+}
+
+// 导出1500行随机生成的数据
+export const rowData: VehicleData[] = generateRandomData(1500);

@@ -6,9 +6,19 @@ export interface EditorState {
   color: string;
 }
 
+// 行跳转参数接口
+export interface JumpToRowOptions {
+  rowIndex: number;          // 目标行号（1-based）
+  highlight?: boolean;       // 是否高亮显示
+  focusCell?: {             // 可选的单元格聚焦
+    field: string;          // 列字段名
+    scrollIntoView?: boolean; // 是否滚动到可视区域
+  };
+}
+
 // 表格列定义
 export interface GridColumn {
-  field: string;
+  field?: string;
   headerName?: string;
   sortable?: boolean;
   filter?: boolean;
@@ -17,6 +27,13 @@ export interface GridColumn {
   headerCheckboxSelection?: boolean;
   cellEditor?: string;
   cellEditorParams?: any;
+  valueGetter?: string;
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  pinned?: 'left' | 'right';
+  suppressMovable?: boolean;
+  cellClass?: string;
 }
 
 // 车辆数据类型

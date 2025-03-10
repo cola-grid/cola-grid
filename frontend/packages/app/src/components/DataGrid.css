@@ -28,3 +28,37 @@
 .ag-theme-quartz-dark .ag-row-selected {
   background-color: #2563eb !important;
 }
+
+.grid-row-number {
+  background-color: var(--header-background-color, #f3f4f6);
+  color: var(--foreground-color, #374151);
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.theme-dark .grid-row-number {
+  background-color: var(--header-background-color, #111827);
+  color: var(--foreground-color, #ffffff);
+}
+
+@keyframes flash {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(79, 70, 229, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.ag-row-flash {
+  animation: flash 1s ease-out;
+}
+
+.theme-dark .ag-row-flash {
+  animation: flash 1s ease-out;
+}

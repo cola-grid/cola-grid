@@ -8,7 +8,8 @@ import {
   AllEnterpriseModule, 
   ModuleRegistry,
   Column,
-  RowNode
+  RowNode,
+  CellPosition
 } from 'ag-grid-enterprise';
 import { 
   AllCommunityModule, 
@@ -23,7 +24,8 @@ import {
   columnDefs, 
   rowData, 
   subscribeToEditorStateChanges, 
-  simulateServerPush 
+  simulateServerPush,
+  JumpToRowOptions 
 } from '@cola-grid/api';
 
 const lightTheme = themeQuartz.withParams({
@@ -53,14 +55,16 @@ ModuleRegistry.registerModules([
 
 export interface DataGridProps {
   className?: string;
+  onJumpToRow?: (options: JumpToRowOptions) => void;
 }
 
-export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
+export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) => {
   const gridRef = useRef<any>();
   const [editingStates] = useState(new Map<string, EditorState>());
   const manager = useRef(new DynamicStyleManager());
   const unsubscribeRef = useRef<() => void>();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [jumpToRow, setJumpToRow] = useState<number>(1);
 
   // 获取单元格的唯一标识
   const getCellKey = useCallback((rowIndex: number, colId: string) => {
@@ -196,6 +200,74 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
     onExportExcel();
   }, [onExportExcel]);
 
+  // 处理行跳转的核心逻辑
+  const handleRowNavigation = useCallback((options: JumpToRowOptions) => {
+    if (!gridRef.current) return;
+    
+    const targetIndex = options.rowIndex - 1; // 转换为0基索引
+    if (targetIndex < 0 || targetIndex >= 1500) return;
+
+    // 确保目标行在可视区域内
+    gridRef.current.api.ensureIndexVisible(targetIndex);
+    
+    // 如果需要高亮显示
+    if (options.highlight) {
+      const rowNode = gridRef.current.api.getDisplayedRowAtIndex(targetIndex);
+      if (rowNode) {
+        rowNode.setDataValue('flash', true);
+        setTimeout(() => rowNode.setDataValue('flash', false), 1000);
+      }
+    }
+
+    // 如果需要聚焦特定单元格
+    if (options.focusCell) {
+      const cellPosition: CellPosition = {
+        rowIndex: targetIndex,
+        column: gridRef.current.columnApi.getColumn(options.focusCell.field),
+        rowPinned: null
+      };
+      
+      if (options.focusCell.scrollIntoView) {
+        gridRef.current.api.ensureColumnVisible(options.focusCell.field);
+      }
+      
+      gridRef.current.api.clearRangeSelection();
+      gridRef.current.api.setFocusedCell(
+        cellPosition.rowIndex,
+        cellPosition.column,
+        cellPosition.rowPinned
+      );
+      gridRef.current.api.getDisplayedRowAtIndex(targetIndex)?.setSelected(true);
+    } else {
+      // 如果没有指定单元格，只选中行
+      gridRef.current.api.clearRangeSelection();
+      gridRef.current.api.getDisplayedRowAtIndex(targetIndex)?.setSelected(true);
+    }
+  }, []);
+
+  // 处理输入框跳转按钮点击
+  const handleJumpToRow = useCallback(() => {
+    const options: JumpToRowOptions = {
+      rowIndex: jumpToRow,
+      highlight: true
+    };
+    
+    // 如果提供了外部处理函数，则调用它
+    if (onJumpToRow) {
+      onJumpToRow(options);
+    } else {
+      // 否则使用内部处理逻辑
+      handleRowNavigation(options);
+    }
+  }, [jumpToRow, onJumpToRow, handleRowNavigation]);
+
+  // 暴露行跳转方法给外部
+  useEffect(() => {
+    if (gridRef.current) {
+      gridRef.current.jumpToRow = handleRowNavigation;
+    }
+  }, [handleRowNavigation]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-4">
@@ -211,6 +283,27 @@ export const DataGrid: React.FC<DataGridProps> = ({ className }) => {
         >
           模拟新编辑者
         </button>
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            min="1"
+            max="1500"
+            className={`w-24 px-3 py-2 border rounded ${
+              isDarkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
+                : 'bg-white border-gray-300 text-gray-700'
+            }`}
+            placeholder="行号"
+            onChange={(e) => setJumpToRow(Math.max(1, Math.min(1500, parseInt(e.target.value) || 1)))}
+            value={jumpToRow}
+          />
+          <button
+            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+            onClick={handleJumpToRow}
+          >
+            跳转
+          </button>
+        </div>
         <button
           className={`px-4 py-2 rounded ${
             isDarkMode 
