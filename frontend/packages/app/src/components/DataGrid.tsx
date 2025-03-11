@@ -28,6 +28,7 @@ import {
   JumpToRowOptions 
 } from '@cola-grid/api';
 import { useTheme } from '../hooks/useTheme';
+import { useToolbarActions } from '../hooks/useToolbarActions';
 
 const lightTheme = themeQuartz.withParams({
   columnBorder: '1px solid #ccc',
@@ -67,6 +68,28 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
   const [jumpToRow, setJumpToRow] = useState<number | ''>(100);
   const debounceTimerRef = useRef<number>();
   const { isDarkMode, toggleTheme, currentTheme, themeClass, themeStyles, inputClassName } = useTheme();
+
+  // 导出到 Excel 的处理函数
+  const onExportExcel = useCallback(() => {
+    const params = {
+      fileName: '车辆数据导出.xlsx',
+    };
+    gridRef.current!.api.exportDataAsExcel(params);
+  }, []);
+
+  // 使用工具栏 actions hook
+  const {
+    handleInsertRow,
+    handleHideColumn,
+    handleFilter,
+    handleGroup,
+    handleSort,
+    handleRowHeight,
+    handleShare
+  } = useToolbarActions({
+    gridRef,
+    onExportExcel
+  });
 
   // 防抖函数
   const debounce = useCallback((fn: Function, delay: number) => {
@@ -203,13 +226,6 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
     };
   }, [handleEditorStateChange, handleViewportChanged]);
 
-  const onExportExcel = useCallback(() => {
-    const params = {
-      fileName: '车辆数据导出.xlsx',
-    };
-    gridRef.current!.api.exportDataAsExcel(params);
-  }, []);
-
   const getContextMenuItems = useCallback(() => {
     return [
       {
@@ -223,59 +239,6 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
       'separator',
       'chartRange',
     ] as any;
-  }, [onExportExcel]);
-
-  const handleInsertRow = useCallback(() => {
-    const rowData = {
-      // 添加新行的默认数据
-    };
-    gridRef.current?.api.applyTransaction({ add: [rowData] });
-  }, []);
-
-  const handleHideColumn = useCallback(() => {
-    const selectedColumns = gridRef.current?.api.getSelectedColumns();
-    if (selectedColumns?.length) {
-      gridRef.current?.columnApi.setColumnsVisible(selectedColumns, false);
-    }
-  }, []);
-
-  const handleFilter = useCallback(() => {
-    gridRef.current?.api.setQuickFilter(
-      prompt('请输入筛选关键字') || ''
-    );
-  }, []);
-
-  const handleGroup = useCallback(() => {
-    const selectedColumns = gridRef.current?.api.getSelectedColumns();
-    if (selectedColumns?.length) {
-      gridRef.current?.columnApi.addRowGroupColumns(selectedColumns);
-    }
-  }, []);
-
-  const handleSort = useCallback(() => {
-    const selectedColumns = gridRef.current?.api.getSelectedColumns();
-    if (selectedColumns?.length) {
-      gridRef.current?.api.setSortModel(
-        selectedColumns.map((col: Column) => ({
-          colId: col.getId(),
-          sort: 'asc'
-        }))
-      );
-    }
-  }, []);
-
-  const handleRowHeight = useCallback(() => {
-    const height = parseInt(prompt('请输入行高（像素）', '40') || '40');
-    if (!isNaN(height)) {
-      gridRef.current?.api.forEachNode((node: RowNode) => {
-        node.setRowHeight(height);
-      });
-      gridRef.current?.api.onRowHeightChanged();
-    }
-  }, []);
-
-  const handleShare = useCallback(() => {
-    onExportExcel();
   }, [onExportExcel]);
 
   // 处理行跳转的核心逻辑
@@ -468,14 +431,14 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
       </div>
       <div>
         <cola-toolbar
-            oninsert-row={handleInsertRow}
-            onhide-column={handleHideColumn}
-            onfilter={handleFilter}
-            ongroup={handleGroup}
-            onsort={handleSort}
-            onadjust-row-height={handleRowHeight}
-            onshare={handleShare}
-          />
+          oninsert-row={handleInsertRow}
+          onhide-column={handleHideColumn}
+          onfilter={handleFilter}
+          ongroup={handleGroup}
+          onsort={handleSort}
+          onadjust-row-height={handleRowHeight}
+          onshare={handleShare}
+        />
       </div>
       <div 
         className={`w-full h-[500px] ${themeClass}`}
