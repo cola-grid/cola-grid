@@ -27,6 +27,7 @@ import {
   simulateServerPush,
   JumpToRowOptions 
 } from '@cola-grid/api';
+import { useTheme } from '../hooks/useTheme';
 
 const lightTheme = themeQuartz.withParams({
   columnBorder: '1px solid #ccc',
@@ -63,9 +64,9 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
   const [editingStates] = useState(new Map<string, EditorState>());
   const manager = useRef(new DynamicStyleManager());
   const unsubscribeRef = useRef<() => void>();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [jumpToRow, setJumpToRow] = useState<number | ''>(100);
   const debounceTimerRef = useRef<number>();
+  const { isDarkMode, toggleTheme, currentTheme, themeClass, themeStyles, inputClassName } = useTheme();
 
   // 防抖函数
   const debounce = useCallback((fn: Function, delay: number) => {
@@ -223,10 +224,6 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
       'chartRange',
     ] as any;
   }, [onExportExcel]);
-
-  const toggleTheme = useCallback(() => {
-    setIsDarkMode(prev => !prev);
-  }, []);
 
   const handleInsertRow = useCallback(() => {
     const rowData = {
@@ -433,11 +430,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
             type="number"
             min="1"
             max="1500"
-            className={`w-24 px-3 py-2 border rounded ${
-              isDarkMode
-                ? 'bg-gray-700 border-gray-600 text-white'
-                : 'bg-white border-gray-300 text-gray-700'
-            }`}
+            className={inputClassName}
             placeholder="行号"
             onChange={(e) => {
               const value = e.target.value;
@@ -485,23 +478,12 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
           />
       </div>
       <div 
-        className={`w-full h-[500px] ${isDarkMode ? 'theme-dark' : 'theme-light'}`}
-        style={{
-          '--toolbar-bg': isDarkMode ? '#1f2937' : '#ffffff',
-          '--toolbar-border-color': isDarkMode ? '#374151' : '#e8e8e8',
-          '--button-border-color': isDarkMode ? '#4b5563' : '#d9d9d9',
-          '--button-color': isDarkMode ? '#e5e7eb' : '#595959',
-          '--button-hover-color': isDarkMode ? '#60a5fa' : '#1677ff',
-          '--button-hover-border-color': isDarkMode ? '#60a5fa' : '#1677ff',
-          '--button-hover-bg': isDarkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(22, 119, 255, 0.1)',
-          '--button-active-color': isDarkMode ? '#3b82f6' : '#0958d9',
-          '--button-active-border-color': isDarkMode ? '#3b82f6' : '#0958d9',
-          '--divider-color': isDarkMode ? '#374151' : '#e8e8e8'
-        } as React.CSSProperties}
+        className={`w-full h-[500px] ${themeClass}`}
+        style={themeStyles as React.CSSProperties}
       >
         <AgGridReact
           ref={gridRef}
-          theme={isDarkMode ? darkTheme : lightTheme}
+          theme={currentTheme}
           columnDefs={[
             ...(columnDefs as any)
           ]}
