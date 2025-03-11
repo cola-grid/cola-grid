@@ -10,27 +10,19 @@ export const columnDefs: GridColumn[] = [
     maxWidth: 80,
     sortable: false,
     filter: false,
-    pinned: 'left',
     suppressMovable: true,
     cellClass: 'grid-row-number'
   },
   { 
     field: 'make',
-    sortable: true,
-    filter: true,
-    checkboxSelection: true,
-    headerCheckboxSelection: true
+    editable: true,
   },
   { 
     field: 'model',
-    sortable: true,
-    filter: true,
     editable: true,
   },
   { 
     field: 'price',
-    sortable: true,
-    filter: true,
     editable: true,
     cellEditor: 'agRichSelect',
     cellEditorParams: {

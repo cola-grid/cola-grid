@@ -215,12 +215,13 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
         name: '导出到 Excel',
         action: onExportExcel,
       },
+      'separator',
       'copy',
       'copyWithHeaders',
       'paste',
       'separator',
       'chartRange',
-    ];
+    ] as any;
   }, [onExportExcel]);
 
   const toggleTheme = useCallback(() => {
@@ -486,7 +487,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
         <AgGridReact
           ref={gridRef}
           theme={isDarkMode ? darkTheme : lightTheme}
-          columnDefs={columnDefs}
+          columnDefs={columnDefs as any}
           rowData={rowData}
           onGridReady={onGridReady}
           animateRows={true}
@@ -494,29 +495,11 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
             flex: 1,
             minWidth: 100,
             resizable: true,
-            enableRowGroup: true,
-            enablePivot: true,
-            enableValue: true,
-            sortable: true,
-            filter: true
           }}
-          sideBar={{
-            toolPanels: [
-              {
-                id: 'columns',
-                labelDefault: '列',
-                labelKey: 'columns',
-                iconKey: 'columns',
-                toolPanel: 'agColumnsToolPanel',
-              },
-              {
-                id: 'filters',
-                labelDefault: '筛选',
-                labelKey: 'filters',
-                iconKey: 'filter',
-                toolPanel: 'agFiltersToolPanel',
-              },
-            ],
+          rowSelection={{
+            mode: 'multiRow',
+            headerCheckbox: true,
+            enableClickSelection: true,
           }}
           statusBar={{
             statusPanels: [
@@ -526,16 +509,11 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
               { statusPanel: 'agAggregationComponent' },
             ],
           }}
-          enableRangeSelection={true}
+          cellSelection={true}
           groupDisplayType={'multipleColumns'}
-          rowSelection="multiple"
-          enableRangeHandle={true}
-          enableFillHandle={true}
           undoRedoCellEditing={true}
           undoRedoCellEditingLimit={20}
-          enableCellChangeFlash={true}
           getContextMenuItems={getContextMenuItems}
-          suppressCopyRowsToClipboard={false}
           clipboardDelimiter="\t"
         />
       </div>
