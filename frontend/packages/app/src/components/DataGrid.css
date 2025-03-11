@@ -30,7 +30,7 @@
 }
 
 .grid-row-number {
-  background-color: var(--header-background-color, #f3f4f6);
+  background-color: var(--header-background-color) !important;
   color: var(--foreground-color, #374151);
   text-align: center;
   font-size: 0.875rem;
@@ -38,9 +38,17 @@
   user-select: none;
 }
 
+.grid-row-number .ag-checkbox-input-wrapper {
+  background-color: transparent !important;
+}
+
 .theme-dark .grid-row-number {
-  background-color: var(--header-background-color, #111827);
+  background-color: var(--header-background-color) !important;
   color: var(--foreground-color, #ffffff);
+}
+
+.theme-light .grid-row-number {
+  background-color: var(--header-background-color) !important;
 }
 
 @keyframes flash {

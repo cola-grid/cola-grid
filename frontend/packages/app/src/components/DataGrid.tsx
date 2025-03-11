@@ -64,7 +64,7 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
   const manager = useRef(new DynamicStyleManager());
   const unsubscribeRef = useRef<() => void>();
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [jumpToRow, setJumpToRow] = useState<number>(1);
+  const [jumpToRow, setJumpToRow] = useState<number | ''>(100);
   const debounceTimerRef = useRef<number>();
 
   // 防抖函数
@@ -389,6 +389,8 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
 
   // 处理输入框跳转按钮点击
   const handleJumpToRow = useCallback(() => {
+    if (typeof jumpToRow !== 'number') return;
+    
     const options: JumpToRowOptions = {
       rowIndex: jumpToRow,
       highlight: true,
@@ -437,12 +439,25 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
                 : 'bg-white border-gray-300 text-gray-700'
             }`}
             placeholder="行号"
-            onChange={(e) => setJumpToRow(Math.max(1, Math.min(1500, parseInt(e.target.value) || 1)))}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                setJumpToRow('');
+              } else {
+                const num = parseInt(value);
+                if (!isNaN(num)) {
+                  setJumpToRow(Math.max(1, Math.min(1500, num)));
+                }
+              }
+            }}
             value={jumpToRow}
           />
           <button
-            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+            className={`px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 ${
+              typeof jumpToRow !== 'number' ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             onClick={handleJumpToRow}
+            disabled={typeof jumpToRow !== 'number'}
           >
             跳转
           </button>
@@ -487,7 +502,9 @@ export const DataGrid: React.FC<DataGridProps> = ({ className, onJumpToRow }) =>
         <AgGridReact
           ref={gridRef}
           theme={isDarkMode ? darkTheme : lightTheme}
-          columnDefs={columnDefs as any}
+          columnDefs={[
+            ...(columnDefs as any)
+          ]}
           rowData={rowData}
           onGridReady={onGridReady}
           animateRows={true}

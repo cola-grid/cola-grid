@@ -10,7 +10,6 @@ export const columnDefs: GridColumn[] = [
     maxWidth: 80,
     sortable: false,
     filter: false,
-    suppressMovable: true,
     cellClass: 'grid-row-number'
   },
   { 
